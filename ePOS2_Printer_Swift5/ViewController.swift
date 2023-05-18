@@ -292,19 +292,19 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToCutter")
-            return false
-        }
-
-        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
-                if result != EPOS2_SUCCESS.rawValue {
-                    printer!.clearCommandBuffer()
-                    MessageView.showErrorEpos(result, method:"addCut")
-                    return false
-                }
+//        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
+//        if result != EPOS2_SUCCESS.rawValue {
+//            printer!.clearCommandBuffer()
+//            MessageView.showErrorEpos(result, method:"feedToCutter")
+//            return false
+//        }
+//
+//        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
+//        if result != EPOS2_SUCCESS.rawValue {
+//            printer!.clearCommandBuffer()
+//            MessageView.showErrorEpos(result, method:"addCut")
+//            return false
+//        }
 
         return true
     }
@@ -382,8 +382,6 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-        let transBegin = printer!.beginTransaction()
-        
         var result = printer!.sendData(Int(EPOS2_PARAM_DEFAULT))
         if result != EPOS2_SUCCESS.rawValue {
             printer!.clearCommandBuffer()
@@ -391,8 +389,6 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             printer!.disconnect()
             return false
         }
-
-        let transEnd = printer!.endTransaction()
 
         return true
     }
@@ -406,15 +402,11 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         }
         printer!.setReceiveEventDelegate(self)
 
-        do {
-            let path = try FileManager.default.url(for: .documentDirectory,
-                                                   in: .userDomainMask,
-                                                   appropriateFor: nil,
-                                                   create: true)
-            print(path)
-        } catch {
-            print("uh oh")
-        }
+        let path = try? FileManager.default.url(for: .documentDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+        print(path ?? "uh oh")
 
         return true
     }
