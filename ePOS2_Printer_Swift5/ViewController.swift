@@ -63,7 +63,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         printerList!.addItem(NSLocalizedString("printerseries_t100", comment:""), value: EPOS2_TM_T100)
         printerList!.addItem(NSLocalizedString("printerseries_u220", comment:""), value: EPOS2_TM_U220)
         printerList!.addItem(NSLocalizedString("printerseries_u330", comment:""), value: EPOS2_TM_U330)
-        printerList!.addItem(NSLocalizedString("printerseries_l90", comment:""), value: EPOS2_TM_L90LFC)
+        printerList!.addItem(NSLocalizedString("printerseries_l90", comment:""), value: EPOS2_TM_T20)
         printerList!.addItem(NSLocalizedString("printerseries_h6000", comment:""), value: EPOS2_TM_H6000)
         printerList!.addItem(NSLocalizedString("printerseries_m30ii", comment:""), value: EPOS2_TM_M30II)
         printerList!.addItem(NSLocalizedString("printerseries_ts100", comment:""), value: EPOS2_TS_100)
