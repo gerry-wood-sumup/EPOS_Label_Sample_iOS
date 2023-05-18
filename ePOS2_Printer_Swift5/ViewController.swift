@@ -239,7 +239,11 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
 
-        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num"), let logoData = image.bandw().resizeImageTo(size: CGSize(width: 434.0, height: 210.0)) else {
+//        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num"), let logoData = image.bandw().resizeImageTo(size: CGSize(width: 410.0, height: 210.0)) else {
+//            return false
+//        }
+        
+        guard let logoData = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num") else {
             return false
         }
 
@@ -708,7 +712,7 @@ extension UIImage {
         }
     }
     
-    func resizeImageTo(size: CGSize) -> UIImage? {
+    func resizeImageToresizeImageTo(size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
         self.draw(in: CGRect(origin: CGPoint.zero, size: size))
         let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
