@@ -178,7 +178,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             textWarnings.text = ""
             let queue = OperationQueue()
             queue.addOperation({ [self] in
-                if !runPrinterCouponSequence() {
+                if !runOneLabelImageSequence() {
                     hideIndicator();
                 }
             })
@@ -233,16 +233,63 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         return true
     }
     
-    func runPrinterCouponSequence() -> Bool {
+    func runOneLabelImageSequence() -> Bool {
+        var result = EPOS2_SUCCESS.rawValue
 
-        if !createCouponData() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
+
+        let textData: NSMutableString = NSMutableString()
+        let logoData = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num")
+
+        if logoData == nil {
             return false
         }
-        
-        if !printData() {
+
+        result = printer!.addCommand(Data(esc_pos: .feedToPrintStart))
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"feedToPrintStart")
             return false
         }
-        
+
+        result = printer!.add(logoData,
+                              x: 0,
+                              y: 0,
+                              width: Int(logoData!.size.width),
+                              height: Int(logoData!.size.height),
+                              color: EPOS2_COLOR_1.rawValue,
+                              mode: EPOS2_MODE_MONO.rawValue,
+                              halftone: EPOS2_HALFTONE_DITHER.rawValue,
+                              brightness: Double(EPOS2_PARAM_DEFAULT),
+                              compress: EPOS2_COMPRESS_AUTO.rawValue)
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"addImage")
+            return false
+        }
+
+        result = printer!.addCommand(Data(esc_pos: .feedToPeeler))
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"feedToPeeler")
+            return false
+        }
+
+        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"feedToCutter")
+            return false
+        }
+
+        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"addCut")
+            return false
+        }
+
         return true
     }
 
@@ -298,7 +345,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
 //            MessageView.showErrorEpos(result, method:"feedToCutter")
 //            return false
 //        }
-//
+
 //        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
 //        if result != EPOS2_SUCCESS.rawValue {
 //            printer!.clearCommandBuffer()

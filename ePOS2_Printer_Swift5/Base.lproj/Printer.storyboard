@@ -79,10 +79,10 @@
                                     <action selector="didTouchUpInside:" destination="BYZ-38-t0r" eventType="touchUpInside" id="wfD-ME-S6Y"/>
                                 </connections>
                             </button>
-                            <button hidden="YES" opaque="NO" tag="4" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="iGg-we-vWL" userLabel="Button Coupon">
+                            <button opaque="NO" tag="4" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="iGg-we-vWL" userLabel="Button Coupon">
                                 <rect key="frame" x="20" y="407" width="280" height="36"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Sample Coupon" backgroundImage="button.png">
+                                <state key="normal" title="Print one Label Image" backgroundImage="button.png">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 </state>
                                 <connections>
