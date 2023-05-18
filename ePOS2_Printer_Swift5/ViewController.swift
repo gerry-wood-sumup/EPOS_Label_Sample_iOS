@@ -239,12 +239,9 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
 
-        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num") else {
+        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num"), let logoData = image.bandw().resizeImageTo(size: CGSize(width: 434.0, height: 210.0)) else {
             return false
         }
-        
-        let logoData = image.bandw()
-
 
         if transact { let _ = printer!.beginTransaction() }
 
@@ -691,18 +688,18 @@ extension UIImage {
     func bandw() -> UIImage {
         guard let currentCGImage = self.cgImage else { return  UIImage()}
         let currentCIImage = CIImage(cgImage: currentCGImage)
-
+        
         let filter = CIFilter(name: "CIColorMonochrome")
         filter?.setValue(currentCIImage, forKey: "inputImage")
-
+        
         // set a gray value for the tint color
         filter?.setValue(CIColor(red: 0.7, green: 0.7, blue: 0.7), forKey: "inputColor")
-
+        
         filter?.setValue(1.0, forKey: "inputIntensity")
         guard let outputImage = filter?.outputImage else { return  UIImage() }
-
+        
         let context = CIContext()
-
+        
         if let cgimg = context.createCGImage(outputImage, from: outputImage.extent) {
             let processedImage = UIImage(cgImage: cgimg)
             return processedImage
@@ -710,4 +707,14 @@ extension UIImage {
             return UIImage()
         }
     }
+    
+    func resizeImageTo(size: CGSize) -> UIImage? {
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        self.draw(in: CGRect(origin: CGPoint.zero, size: size))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        return resizedImage
+    }
 }
+
+
