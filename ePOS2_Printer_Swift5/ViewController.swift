@@ -239,11 +239,12 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
 
-        let logoData = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num")
-
-        if logoData == nil {
+        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num") else {
             return false
         }
+        
+        let logoData = image.bandw()
+
 
         if transact { let _ = printer!.beginTransaction() }
 
@@ -257,8 +258,8 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         result = printer!.add(logoData,
                               x: 0,
                               y: 0,
-                              width: Int(logoData!.size.width),
-                              height: Int(logoData!.size.height),
+                              width: Int(logoData.size.width),
+                              height: Int(logoData.size.height),
                               color: EPOS2_COLOR_1.rawValue,
                               mode: EPOS2_MODE_MONO.rawValue,
                               halftone: EPOS2_HALFTONE_DITHER.rawValue,
@@ -277,19 +278,19 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-//        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"feedToCutter")
-//            return false
-//        }
+        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"feedToCutter")
+            return false
+        }
 
-//        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"addCut")
-//            return false
-//        }
+        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
+        if result != EPOS2_SUCCESS.rawValue {
+            printer!.clearCommandBuffer()
+            MessageView.showErrorEpos(result, method:"addCut")
+            return false
+        }
 
         if transact { let _ = printer!.endTransaction() }
         
@@ -683,5 +684,30 @@ extension ESC_POSCommand {
 
     static var feedToPrintStart: Self {
         return ESC_POSCommand([28, 40, 76, 2, 0, 67, 50])
+    }
+}
+
+extension UIImage {
+    func bandw() -> UIImage {
+        guard let currentCGImage = self.cgImage else { return  UIImage()}
+        let currentCIImage = CIImage(cgImage: currentCGImage)
+
+        let filter = CIFilter(name: "CIColorMonochrome")
+        filter?.setValue(currentCIImage, forKey: "inputImage")
+
+        // set a gray value for the tint color
+        filter?.setValue(CIColor(red: 0.7, green: 0.7, blue: 0.7), forKey: "inputColor")
+
+        filter?.setValue(1.0, forKey: "inputIntensity")
+        guard let outputImage = filter?.outputImage else { return  UIImage() }
+
+        let context = CIContext()
+
+        if let cgimg = context.createCGImage(outputImage, from: outputImage.extent) {
+            let processedImage = UIImage(cgImage: cgimg)
+            return processedImage
+        } else {
+            return UIImage()
+        }
     }
 }
