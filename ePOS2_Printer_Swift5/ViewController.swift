@@ -233,18 +233,19 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         return true
     }
     
-    func runOneLabelImageSequence() -> Bool {
+    func runOneLabelImageSequence(_ transact: Bool = false) -> Bool {
         var result = EPOS2_SUCCESS.rawValue
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
 
-        let textData: NSMutableString = NSMutableString()
         let logoData = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num")
 
         if logoData == nil {
             return false
         }
+
+        if transact { let _ = printer!.beginTransaction() }
 
         result = printer!.addCommand(Data(esc_pos: .feedToPrintStart))
         if result != EPOS2_SUCCESS.rawValue {
@@ -276,20 +277,35 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToCutter")
+//        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
+//        if result != EPOS2_SUCCESS.rawValue {
+//            printer!.clearCommandBuffer()
+//            MessageView.showErrorEpos(result, method:"feedToCutter")
+//            return false
+//        }
+
+//        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
+//        if result != EPOS2_SUCCESS.rawValue {
+//            printer!.clearCommandBuffer()
+//            MessageView.showErrorEpos(result, method:"addCut")
+//            return false
+//        }
+
+        if transact { let _ = printer!.endTransaction() }
+        
+//        result = printer!.sendData(Int(EPOS2_PARAM_DEFAULT))
+//        if result != EPOS2_SUCCESS.rawValue {
+//            printer!.clearCommandBuffer()
+//            MessageView.showErrorEpos(result, method:"sendData")
+//            printer!.disconnect()
+//            return false
+//        }
+        
+        // This will cause a `sendData` to be done.
+        if !printData() {
             return false
         }
-
-        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addCut")
-            return false
-        }
-
+        
         return true
     }
 
