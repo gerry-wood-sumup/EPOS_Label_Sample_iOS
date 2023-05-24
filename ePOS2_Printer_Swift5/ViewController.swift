@@ -39,6 +39,8 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
     var valuePrinterModel: Epos2ModelLang = EPOS2_MODEL_ANK
     
     var target: String?
+
+    var isExecutingMultipleLabels = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -168,7 +170,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             textWarnings.text = ""
             let queue = OperationQueue()
             queue.addOperation({ [self] in
-                if !runPrinterReceiptSequence() {
+                if !runOneLabelImageSequence() {
                     hideIndicator();
                 }
             })
@@ -178,7 +180,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             textWarnings.text = ""
             let queue = OperationQueue()
             queue.addOperation({ [self] in
-                if !runOneLabelImageSequence() {
+                if !runMultiLabelImageSequence() {
                     hideIndicator();
                 }
             })
@@ -219,31 +221,14 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         }
     }
 
-    func runPrinterReceiptSequence() -> Bool {
-//        for _ in 1...4 { // Enable this if want to send multiple prints
-            if !createReceiptData() {
-                return false
-            }
-
-            if !printData() {
-                return false
-            }
-//        }
-        
-        return true
-    }
-    
-    func runOneLabelImageSequence(_ transact: Bool = false) -> Bool {
+    func runOneLabelImageSequence(_ transact: Bool = false, imageIndex: Int = 1) -> Bool {
         var result = EPOS2_SUCCESS.rawValue
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
 
 //        guard let image = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num"), let logoData = image.bandw().resizeImageTo(size: CGSize(width: 410.0, height: 210.0)) else {
 //            return false
 //        }
-        
-        guard let logoData = UIImage(named: "1 - 2.25_x1.25_ at 203 dpi 410x210 with num") else {
+
+        guard let logoData = UIImage(named: "\(imageIndex) - 2.25_x1.25_ at 203 dpi 410x210 with num") else {
             return false
         }
 
@@ -286,82 +271,13 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addCut")
-            return false
-        }
-
-        if transact { let _ = printer!.endTransaction() }
-        
-//        result = printer!.sendData(Int(EPOS2_PARAM_DEFAULT))
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"sendData")
-//            printer!.disconnect()
-//            return false
-//        }
-        
-        // This will cause a `sendData` to be done.
-        if !printData() {
-            return false
-        }
-        
-        return true
-    }
-
-    func createReceiptData() -> Bool {
-        let barcodeWidth = 2
-        let barcodeHeight = 100
-        
-        var result = EPOS2_SUCCESS.rawValue
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
-
-        let textData: NSMutableString = NSMutableString()
-        let logoData = UIImage(named: "test_label.png")
-
-        if logoData == nil {
-            return false
-        }
-
-        result = printer!.addCommand(Data(esc_pos: .feedToPrintStart))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToPrintStart")
-            return false
-        }
-
-        result = printer!.add(logoData,
-                              x: 0,
-                              y: 0,
-                              width: Int(logoData!.size.width),
-                              height: Int(logoData!.size.height),
-                              color: EPOS2_COLOR_1.rawValue,
-                              mode: EPOS2_MODE_MONO.rawValue,
-                              halftone: EPOS2_HALFTONE_DITHER.rawValue,
-                              brightness: Double(EPOS2_PARAM_DEFAULT),
-                              compress: EPOS2_COMPRESS_AUTO.rawValue)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addImage")
-            return false
-        }
-
-        result = printer!.addCommand(Data(esc_pos: .feedToPeeler))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToPeeler")
-            return false
-        }
-
-//        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"feedToCutter")
-//            return false
+//        if !isExecutingMultipleLabels {
+//            result = printer!.addCommand(Data(esc_pos: .partialCut))
+//            if result != EPOS2_SUCCESS.rawValue {
+//                printer!.clearCommandBuffer()
+//                MessageView.showErrorEpos(result, method:"partialCut")
+//                return false
+//            }
 //        }
 
 //        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
@@ -371,72 +287,34 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
 //            return false
 //        }
 
+        if transact { let _ = printer!.endTransaction() }
+
+        // This will cause a `sendData` to be done.
+        if !printData() {
+            return false
+        }
+
         return true
     }
-    
-    func createCouponData() -> Bool {
-        let barcodeWidth = 2
-        let barcodeHeight = 64
-        
+
+    func runMultiLabelImageSequence(_ transact: Bool = false) -> Bool {
         var result = EPOS2_SUCCESS.rawValue
-        
-        if printer == nil {
-            return false
+
+        isExecutingMultipleLabels = true
+
+        for imageIndex in 1...4 {
+            isExecutingMultipleLabels = imageIndex != 4
+            if !runOneLabelImageSequence(transact, imageIndex: imageIndex) {
+                isExecutingMultipleLabels = false
+                return false
+            }
+
+            sleep(2)
         }
-        
-        let coffeeData = UIImage(named: "coffee.png")
-        let wmarkData = UIImage(named: "wmark.png")
-        
-        if coffeeData == nil || wmarkData == nil {
-            return false
-        }
-        
-        result = printer!.add(wmarkData, x:0, y:0,
-                              width:Int(wmarkData!.size.width),
-                              height:Int(wmarkData!.size.height),
-                              color:EPOS2_PARAM_DEFAULT,
-                              mode:EPOS2_PARAM_DEFAULT,
-                              halftone:EPOS2_PARAM_DEFAULT,
-                              brightness:Double(EPOS2_PARAM_DEFAULT),
-                              compress:EPOS2_PARAM_DEFAULT)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addImage")
-            return false
-        }
-        
-        result = printer!.add(coffeeData, x:0, y:0,
-                              width:Int(coffeeData!.size.width),
-                              height:Int(coffeeData!.size.height),
-                              color:EPOS2_PARAM_DEFAULT,
-                              mode:EPOS2_PARAM_DEFAULT,
-                              halftone:EPOS2_PARAM_DEFAULT,
-                              brightness:3,
-                              compress:EPOS2_PARAM_DEFAULT)
-        
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addImage")
-            return false
-        }
-        
-        result = printer!.addBarcode("01234567890", type:EPOS2_BARCODE_UPC_A.rawValue, hri:EPOS2_PARAM_DEFAULT, font: EPOS2_PARAM_DEFAULT, width:barcodeWidth, height:barcodeHeight)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addBarcode")
-            return false
-        }
-        
-        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addCut")
-            return false
-        }
-        
+
         return true
     }
-    
+
     func printData() -> Bool {
         if printer == nil {
             return false
@@ -527,9 +405,11 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         let queue = OperationQueue()
         queue.addOperation({ [self] in
             self.disconnectPrinter()
-            self.hideIndicator();
-            MessageView.showResult(code, errMessage: makeErrorMessage(status))
-            dispPrinterWarnings(status)
+            if !self.isExecutingMultipleLabels || code != EPOS2_SUCCESS.rawValue {
+                self.hideIndicator();
+                MessageView.showResult(code, errMessage: makeErrorMessage(status))
+                dispPrinterWarnings(status)
+            }
         })
     }
     
@@ -671,20 +551,38 @@ public struct ESC_POSCommand: RawRepresentable {
     }
 }
 
-// ref: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
-
 //Control Commands
 extension ESC_POSCommand {
+    static var feedToPrintStart: Self {
+        ESC_POSCommand([28, 40, 76, 2, 0, 67, 50])
+    }
+
+    static var beginUserSettingsMode: Self {
+        ESC_POSCommand([29, 40, 69, 3, 0, 1, 73, 78])
+    }
+
+    static var setPaperWidth: Self {
+        ESC_POSCommand([29, 40, 69, 4, 0, 5, 117, 60, 0])
+    }
+
+    static var setPaperLayout: Self {
+        ESC_POSCommand([29, 40, 69, 28, 0, 49, 64, 59, UInt8(350 % 256), 59, 40, 59, 70, 59, 20, 59, 250, 59, 50, 59, UInt8(500 % 256), 59])
+    }
+
+    static var endUserSettingsMode: Self {
+        ESC_POSCommand([29, 40, 69, 3, 0, 1, 79, 85, 84])
+    }
+
     static var feedToPeeler: Self {
-        return ESC_POSCommand([28, 40, 76, 2, 0, 65, 48])
+        ESC_POSCommand([28, 40, 76, 2, 0, 65, 48])
     }
 
     static var feedToCutter: Self {
-        return ESC_POSCommand([28, 40, 76, 2, 0, 66, 48])
+        ESC_POSCommand([28, 40, 76, 2, 0, 66, 48])
     }
 
-    static var feedToPrintStart: Self {
-        return ESC_POSCommand([28, 40, 76, 2, 0, 67, 50])
+    static var partialCut: Self {
+        ESC_POSCommand([29, 86, 0])
     }
 }
 
@@ -712,7 +610,7 @@ extension UIImage {
         }
     }
     
-    func resizeImageToresizeImageTo(size: CGSize) -> UIImage? {
+    func resizeImageTo(size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
         self.draw(in: CGRect(origin: CGPoint.zero, size: size))
         let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
