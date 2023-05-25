@@ -272,12 +272,12 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         }
 
 //        if !isExecutingMultipleLabels {
-//            result = printer!.addCommand(Data(esc_pos: .partialCut))
-//            if result != EPOS2_SUCCESS.rawValue {
-//                printer!.clearCommandBuffer()
-//                MessageView.showErrorEpos(result, method:"partialCut")
-//                return false
-//            }
+            result = printer!.addCommand(Data(esc_pos: .partialCut))
+            if result != EPOS2_SUCCESS.rawValue {
+                printer!.clearCommandBuffer()
+                MessageView.showErrorEpos(result, method:"partialCut")
+                return false
+            }
 //        }
 
 //        result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
@@ -298,8 +298,6 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
     }
 
     func runMultiLabelImageSequence(_ transact: Bool = false) -> Bool {
-        var result = EPOS2_SUCCESS.rawValue
-
         isExecutingMultipleLabels = true
 
         for imageIndex in 1...4 {
@@ -566,7 +564,7 @@ extension ESC_POSCommand {
     }
 
     static var setPaperLayout: Self {
-        ESC_POSCommand([29, 40, 69, 28, 0, 49, 64, 59, UInt8(350 % 256), 59, 40, 59, 70, 59, 20, 59, 250, 59, 50, 59, UInt8(500 % 256), 59])
+        ESC_POSCommand([29, 40, 69, 28, 0, 49, 64, 59, 51, 53, 48, 59, 40, 59, 70, 59, 20, 59, 250, 59, 50, 59, 53, 48, 48, 59])
     }
 
     static var endUserSettingsMode: Self {
@@ -582,7 +580,7 @@ extension ESC_POSCommand {
     }
 
     static var partialCut: Self {
-        ESC_POSCommand([29, 86, 0])
+        ESC_POSCommand([29, 86, 66])
     }
 }
 
