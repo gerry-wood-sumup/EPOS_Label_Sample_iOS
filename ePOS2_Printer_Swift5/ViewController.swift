@@ -220,20 +220,6 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         }
     }
 
-    func runPrinterReceiptSequence() -> Bool {
-//        for _ in 1...4 { // Enable this if want to send multiple prints
-            if !createReceiptData() {
-                return false
-            }
-
-            if !printData() {
-                return false
-            }
-//        }
-        
-        return true
-    }
-    
     func runLabelSequence(images: [MarkImage],
                                   _ continuous: Bool = true,
                                   _ transact: Bool = false) -> Bool {
@@ -315,99 +301,16 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
         return true
     }
 
-    func createReceiptData(_ transact: Bool = false) -> Bool {
-        let barcodeWidth = 2
-        let barcodeHeight = 100
-        
-        var result = EPOS2_SUCCESS.rawValue
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy h:mm a"
-
-        let textData: NSMutableString = NSMutableString()
-        let logoData = UIImage(named: "test_label.png")
-
-        if logoData == nil {
-            return false
-        }
-
-        result = printer!.addCommand(Data(esc_pos: .feedToPrintStart))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToPrintStart")
-            return false
-        }
-
-        result = printer!.add(logoData,
-                              x: 0,
-                              y: 0,
-                              width: Int(logoData!.size.width),
-                              height: Int(logoData!.size.height),
-                              color: EPOS2_COLOR_1.rawValue,
-                              mode: EPOS2_MODE_MONO.rawValue,
-                              halftone: EPOS2_HALFTONE_DITHER.rawValue,
-                              brightness: Double(EPOS2_PARAM_DEFAULT),
-                              compress: EPOS2_COMPRESS_AUTO.rawValue)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addImage")
-            return false
-        }
-
-//        result = printer!.addCommand(Data(esc_pos: .feedToPeeler))
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"feedToPeeler")
-//            return false
-//        }
-
-        result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"feedToCutter")
-            return false
-        }
-
-        result = printer!.addCut(EPOS2_PARAM_DEFAULT)
-        if result != EPOS2_SUCCESS.rawValue {
-            printer!.clearCommandBuffer()
-            MessageView.showErrorEpos(result, method:"addCut")
-            return false
-        }
-
-//        result = printer!.addCut(EPOS2_CUT_NO_FEED.rawValue)
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"addCut")
-//            return false
-//        }
-
-//        result = printer!.addCommand(Data(esc_pos: .printAndFeed))
-//        if result != EPOS2_SUCCESS.rawValue {
-//            printer!.clearCommandBuffer()
-//            MessageView.showErrorEpos(result, method:"printAndFeed")
-//            return false
-//        }
-
-        if transact { let _ = printer!.endTransaction() }
-
-        // This will cause a `sendData` to be done.
-        if !printData() {
-            return false
-        }
-
-        return true
-    }
-
     func runMultiLabelImageSequence(_ transact: Bool = false) -> Bool {
         isExecutingMultipleLabels = true
 
-        for img in MarkImage.allCases {
+        for (idx, img) in MarkImage.allCases.enumerated() {
             if !runLabelSequence(images: [img], true, transact) {
                 isExecutingMultipleLabels = false
                 return false
             }
-            sleep(2)
+            print(idx)
+            sleep(idx != MarkImage.allCases.count - 1 ? 2 : 0)
         }
         isExecutingMultipleLabels = false
   
@@ -424,7 +327,7 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
             return false
         }
 
-        var result = printer!.sendData(Int(EPOS2_PARAM_DEFAULT))
+        let result = printer!.sendData(Int(EPOS2_PARAM_DEFAULT))
         if result != EPOS2_SUCCESS.rawValue {
             printer!.clearCommandBuffer()
             MessageView.showErrorEpos(result, method:"sendData")
@@ -724,10 +627,8 @@ extension UIImage {
 
 
 enum MarkImage:Int, CaseIterable {
-    case one, two, three, four
-    
-    static var allCases: [MarkImage] { return [.one, .two, .three, .four] }
-    
+    case one = 0, two, three, four
+
     var filename: String {
         let value = 1 + rawValue
         return "\(value) - 2.25_x1.25_ at 203 dpi 410x210 with num"
