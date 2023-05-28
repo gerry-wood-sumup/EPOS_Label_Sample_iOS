@@ -257,21 +257,21 @@ class ViewController: UIViewController, DiscoveryViewDelegate, CustomPickerViewD
                 return false
             }
 
-            if !continuous {
+//            if !continuous {
                 result = printer!.addCommand(Data(esc_pos: .feedToPeeler))
                 if result != EPOS2_SUCCESS.rawValue {
                     printer!.clearCommandBuffer()
                     MessageView.showErrorEpos(result, method:"feedToPeeler")
                     return false
                 }
-            }
+//            }
 
-            result = printer!.addCommand(Data(esc_pos: .feedToCutter))
-            if result != EPOS2_SUCCESS.rawValue {
-                printer!.clearCommandBuffer()
-                MessageView.showErrorEpos(result, method:"feedToCutter")
-                return false
-            }
+//            result = printer!.addCommand(Data(esc_pos: .feedToCutter))
+//            if result != EPOS2_SUCCESS.rawValue {
+//                printer!.clearCommandBuffer()
+//                MessageView.showErrorEpos(result, method:"feedToCutter")
+//                return false
+//            }
 
             result = printer!.addCut(EPOS2_CUT_FEED.rawValue)
             if result != EPOS2_SUCCESS.rawValue {
